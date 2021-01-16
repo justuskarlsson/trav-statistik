@@ -1,7 +1,5 @@
-* Read directly from html to speed up (at end). **Currently 62 seconds**
-    - Regex
-    - Pip install dom parser
 * Split certain columns so that they can be treated as single numerics
+* Hanlde shoeInfo
 * Get results from "/results"
 * Handle exception for long time ago (click V75)
     ```html
@@ -11,3 +9,11 @@
     - Sqlite
     - Folder with separate csv files, then combine (parallelizable)
 * Make scraper script that goes back week by week, then combines data.
+
+
+
+# Done
+
+* Read directly from html to speed up (at end). **Currently 62 seconds**
+    - Regex
+    - Pip install dom parser

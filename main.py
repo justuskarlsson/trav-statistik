@@ -71,8 +71,6 @@ columns = defaultdict(list)
 for race_idx, race in enumerate(races):
     tds = race.findAll("td")
     for cell in tds:
-        print(type(cell))
-        print(cell.get("class"))
         if (classes := cell.get("class")) is None:
             continue
         header = classes[0].replace("-col","")
@@ -86,8 +84,19 @@ for race_idx, race in enumerate(races):
     assert len(olabels) == len(ovalues)
     for i in range(len(olabels)):
         label = olabels[i].text.replace(":", "")
-        value = ovalues[i].text
-        columns[label].append(value)
+        value = ovalues[i]
+
+        starts_tag = value.find("span", attrs={"class": "start-stats__starts"})
+        if starts_tag:
+            starts = starts_tag.text
+            print(starts)
+            columns[label].append(starts)
+            results = value.text[len(starts):].split("-")
+            print(results)
+            for i in range(len(results)):
+                columns["{}-{}".format(label, i+1)].append(results[i])
+        
+        columns[label].append(value.text)
 
 headers = list(columns.keys())
 print("writing to file")
@@ -99,5 +108,6 @@ for i in range(size):
         vals.append(columns[header][i])
     out.write(";".join(vals) + "\n")
 
+while True: 1
 browser.close()
 exit()
