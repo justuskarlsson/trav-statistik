@@ -54,14 +54,62 @@ def add_extra_stats():
 try_until(accept_cookies)
 try_until(add_extra_stats)
 
+OVERFLOW_LABEL = "css-1dzf2nj-startlistrow-styles--overflowRowLabel"
+OVERFLOW_VALUE = "css-1hd5aa-startlistrow-styles--overflowRowValue"
+out = open("data/{}.csv".format(DATE), "w")
 
 source_code = browser.find_element_by_xpath("//*").get_attribute("outerHTML")
 print(f"Length of source code: {len(source_code)}")
+from bs4 import BeautifulSoup as parse_html
 
-OVERFLOW_LABEL = ".css-1dzf2nj-startlistrow-styles--overflowRowLabel"
-OVERFLOW_VALUE = ".css-1hd5aa-startlistrow-styles--overflowRowValue"
+html = parse_html(source_code)
 
-out = open("data/{}.csv".format(DATE), "w")
+races = html.findAll("table", attrs={"class": "game-table"})[1:]
+text = ""
+columns = defaultdict(list)
+try:
+    for race_idx, race in enumerate(races):
+        tds = race.findAll("td")
+        for cell in tds:
+            print(type(cell))
+            print(cell.get("class"))
+            if (classes := cell.get("class")) is None:
+                continue
+            header = classes[0].replace("-col","")
+            # Don't add overflow td
+            if header:
+                text = cell.text
+                columns[header].append(text)
+        
+        olabels = race.findAll(None, attrs={"class": OVERFLOW_LABEL})
+        ovalues = race.findAll(None, attrs={"class": OVERFLOW_VALUE})
+        assert len(olabels) == len(ovalues)
+        for i in range(len(olabels)):
+            label = olabels[i].text.replace(":", "")
+            value = ovalues[i].text
+            columns[label].append(value)
+except:
+    browser.close()
+    exit()
+
+headers = list(columns.keys())
+print("writing to file")
+out.write(";".join(headers) + "\n")
+size = len(columns[headers[0]])
+for i in range(size):
+    vals = []
+    for header in headers:
+        vals.append(columns[header][i])
+    out.write(";".join(vals) + "\n")
+
+browser.close()
+exit()
+
+##
+## OOOOOOOLD ###
+##
+
+
 races = browser.find_elements_by_css_selector("table.game-table")[1:]
 text = ""
 columns = defaultdict(list)
@@ -95,6 +143,8 @@ for i in range(size):
         vals.append(columns[header][i])
     out.write(";".join(vals) + "\n")
 
-
-browser.close()
-exit()
+#DEV
+while True:
+    pass
+#browser.close()
+#exit()
