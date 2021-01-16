@@ -67,30 +67,27 @@ html = parse_html(source_code)
 races = html.findAll("table", attrs={"class": "game-table"})[1:]
 text = ""
 columns = defaultdict(list)
-try:
-    for race_idx, race in enumerate(races):
-        tds = race.findAll("td")
-        for cell in tds:
-            print(type(cell))
-            print(cell.get("class"))
-            if (classes := cell.get("class")) is None:
-                continue
-            header = classes[0].replace("-col","")
-            # Don't add overflow td
-            if header:
-                text = cell.text
-                columns[header].append(text)
-        
-        olabels = race.findAll(None, attrs={"class": OVERFLOW_LABEL})
-        ovalues = race.findAll(None, attrs={"class": OVERFLOW_VALUE})
-        assert len(olabels) == len(ovalues)
-        for i in range(len(olabels)):
-            label = olabels[i].text.replace(":", "")
-            value = ovalues[i].text
-            columns[label].append(value)
-except:
-    browser.close()
-    exit()
+
+for race_idx, race in enumerate(races):
+    tds = race.findAll("td")
+    for cell in tds:
+        print(type(cell))
+        print(cell.get("class"))
+        if (classes := cell.get("class")) is None:
+            continue
+        header = classes[0].replace("-col","")
+        # Don't add overflow td
+        if header:
+            text = cell.text
+            columns[header].append(text)
+    
+    olabels = race.findAll(None, attrs={"class": OVERFLOW_LABEL})
+    ovalues = race.findAll(None, attrs={"class": OVERFLOW_VALUE})
+    assert len(olabels) == len(ovalues)
+    for i in range(len(olabels)):
+        label = olabels[i].text.replace(":", "")
+        value = ovalues[i].text
+        columns[label].append(value)
 
 headers = list(columns.keys())
 print("writing to file")
@@ -104,47 +101,3 @@ for i in range(size):
 
 browser.close()
 exit()
-
-##
-## OOOOOOOLD ###
-##
-
-
-races = browser.find_elements_by_css_selector("table.game-table")[1:]
-text = ""
-columns = defaultdict(list)
-for race_idx, race in enumerate(races):
-    tds = race.find_elements_by_css_selector("td")
-    print("Lopp: {}".format(race_idx + 1))
-    # https://www.selenium.dev/selenium/docs/api/py/webdriver_remote/selenium.webdriver.remote.webelement.html
-    
-    for cell in tds:
-        text = cell.text
-        header = cell.get_attribute("class").replace("-col","")
-        # Don't add overflow td
-        if header:
-            columns[header].append(text)
-    
-    olabels = race.find_elements_by_css_selector(OVERFLOW_LABEL)
-    ovalues = race.find_elements_by_css_selector(OVERFLOW_VALUE)
-    assert len(olabels) == len(ovalues)
-    for i in range(len(olabels)):
-        label = olabels[i].text.replace(":", "")
-        value = ovalues[i].text
-        columns[label].append(value)
-    
-
-headers = list(columns.keys())
-out.write(";".join(headers) + "\n")
-size = len(columns[headers[0]])
-for i in range(size):
-    vals = []
-    for header in headers:
-        vals.append(columns[header][i])
-    out.write(";".join(vals) + "\n")
-
-#DEV
-while True:
-    pass
-#browser.close()
-#exit()
