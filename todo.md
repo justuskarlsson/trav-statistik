@@ -1,7 +1,8 @@
 * Split certain columns so that they can be treated as single numerics
-* Hanlde shoeInfo
+    - Make dict for header names, type(int, text, split) 
+* Handle shoeInfo
 * Get results from "/results"
-* Handle exception for long time ago (click V75)
+* Handle exception for races more than 2 years ago (click V75)
     ```html
     <span class="css-1v9zbc5-TrackHighlights-styles--textWrapper" data-test-id="track-highlights-title">V75</span>
     ```

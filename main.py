@@ -1,19 +1,25 @@
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
+from bs4 import BeautifulSoup as parse_html
+
 import time 
 from collections import defaultdict
+import os
+
 URL = "https://www.atg.se/spel/{}/V75"
 DATE = "2020-12-19"
 url = URL.format(DATE)
 
 chrome_options = Options()
 
+# !! Uncomment below to not open browser window !!
 #chrome_options.add_argument("--headless")
+
 browser = webdriver.Chrome(options=chrome_options)
 browser.get(url)
 
 def try_until(function, times=100):
-    for i in range(times):
+    for _ in range(times):
         try:
             function()
             break
@@ -25,7 +31,6 @@ def click(id):
 
 def click_css(selector, idx=0):
     els = browser.find_elements_by_css_selector(selector)
-    print("Elements:", els)
     els[idx].click()
 
 def click_all_css(selector, root_css):
@@ -56,11 +61,10 @@ try_until(add_extra_stats)
 
 OVERFLOW_LABEL = "css-1dzf2nj-startlistrow-styles--overflowRowLabel"
 OVERFLOW_VALUE = "css-1hd5aa-startlistrow-styles--overflowRowValue"
-out = open("data/{}.csv".format(DATE), "w")
 
 source_code = browser.find_element_by_xpath("//*").get_attribute("outerHTML")
 print(f"Length of source code: {len(source_code)}")
-from bs4 import BeautifulSoup as parse_html
+
 
 html = parse_html(source_code)
 
@@ -89,25 +93,30 @@ for race_idx, race in enumerate(races):
         starts_tag = value.find("span", attrs={"class": "start-stats__starts"})
         if starts_tag:
             starts = starts_tag.text
-            print(starts)
             columns[label].append(starts)
             results = value.text[len(starts):].split("-")
-            print(results)
             for i in range(len(results)):
                 columns["{}-{}".format(label, i+1)].append(results[i])
+            continue
         
         columns[label].append(value.text)
 
 headers = list(columns.keys())
-print("writing to file")
-out.write(";".join(headers) + "\n")
-size = len(columns[headers[0]])
-for i in range(size):
-    vals = []
-    for header in headers:
-        vals.append(columns[header][i])
-    out.write(";".join(vals) + "\n")
 
-while True: 1
+if not os.path.isdir("data"):
+    os.mkdir("data")
+
+file_name = "data/{}.csv".format(DATE)
+print("Writing to file: '{}'".format(file_name))
+
+with open(file_name, "w") as out:
+    out.write(";".join(headers) + "\n")
+    size = len(columns[headers[0]])
+    for i in range(size):
+        vals = []
+        for header in headers:
+            vals.append(columns[header][i])
+        out.write(";".join(vals) + "\n")
+
 browser.close()
 exit()
