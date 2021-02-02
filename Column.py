@@ -1,18 +1,25 @@
 # UNDER CONSTRUCTION
 
-
 class Column:
-    pass
+    def parse(self, text):
+        return text
 
 class Integer(Column):
     # Remove blank spaces
-    pass
+    def parse(self, text: str):
+        return text.replace(" ", "")
 
 class Text(Column):
     pass
 
 class Percentage(Column):
     pass
+
+class Split(Column):
+    def parse(self, text):
+        res = text.split(":")
+        return res
+
 
 columns = {
     "horse": HorseSplit(),
@@ -26,5 +33,13 @@ columns = {
     "cartInfo": Text(),
     "lifeStats": Split(),
     "vOdds": Decimal(),
-    "pOdds": 
+    "pOdds": Decimal(),
+    "postPositionAndDistance": Split(" : "),
+    "Tränare": Text(),
+    "Plats%": Percentage(),
+    "Snittodds": Decimal(),
+    "Poäng": Integer(),
+    "Hemmabana": Text(),
+    "StarterCurrent": Split(),
+    "StarterPrev": Split(),
 }
