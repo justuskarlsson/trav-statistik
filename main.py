@@ -117,6 +117,7 @@ with open(file_name, "w") as out:
         for header in headers:
             vals.append(columns[header][i])
         out.write(";".join(vals) + "\n")
-
+while True:
+    pass
 browser.close()
 exit()
