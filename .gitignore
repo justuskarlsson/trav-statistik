@@ -3,3 +3,4 @@ data
 *.exe
 out.txt
 .vscode
+__pycache__

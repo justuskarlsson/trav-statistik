@@ -7,3 +7,5 @@
 ## Run it
 To run it just execute `python main.py`. A browser window will appear,
 and when the script is done a csv file will have been created in the `data` folder corresponding to the date scraped.
+
+https://docs.google.com/spreadsheets/d/1UDsedSgB1nm_nQL3tJITlHxDdRNTo0d9BOGYVCbcHIw/edit#gid=944928861

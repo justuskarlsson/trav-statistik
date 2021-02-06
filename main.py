@@ -6,6 +6,8 @@ import time
 from collections import defaultdict
 import os
 
+from DataParser import DataParser
+
 URL = "https://www.atg.se/spel/{}/V75"
 DATE = "2020-12-19"
 url = URL.format(DATE)
@@ -59,9 +61,6 @@ def add_extra_stats():
 try_until(accept_cookies)
 try_until(add_extra_stats)
 
-OVERFLOW_LABEL = "css-1dzf2nj-startlistrow-styles--overflowRowLabel"
-OVERFLOW_VALUE = "css-1hd5aa-startlistrow-styles--overflowRowValue"
-
 source_code = browser.find_element_by_xpath("//*").get_attribute("outerHTML")
 print(f"Length of source code: {len(source_code)}")
 
@@ -69,55 +68,11 @@ print(f"Length of source code: {len(source_code)}")
 html = parse_html(source_code)
 
 races = html.findAll("table", attrs={"class": "game-table"})[1:]
-text = ""
-columns = defaultdict(list)
 
-for race_idx, race in enumerate(races):
-    tds = race.findAll("td")
-    for cell in tds:
-        if (classes := cell.get("class")) is None:
-            continue
-        header = classes[0].replace("-col","")
-        # Don't add overflow td
-        if header:
-            text = cell.text
-            columns[header].append(text)
-    
-    olabels = race.findAll(None, attrs={"class": OVERFLOW_LABEL})
-    ovalues = race.findAll(None, attrs={"class": OVERFLOW_VALUE})
-    assert len(olabels) == len(ovalues)
-    for i in range(len(olabels)):
-        label = olabels[i].text.replace(":", "")
-        value = ovalues[i]
+data_parser = DataParser(races)
+data_parser.fill_races()
+data_parser.write_to_file(DATE)
 
-        starts_tag = value.find("span", attrs={"class": "start-stats__starts"})
-        if starts_tag:
-            starts = starts_tag.text
-            columns[label].append(starts)
-            results = value.text[len(starts):].split("-")
-            for i in range(len(results)):
-                columns["{}-{}".format(label, i+1)].append(results[i])
-            continue
-        
-        columns[label].append(value.text)
 
-headers = list(columns.keys())
-
-if not os.path.isdir("data"):
-    os.mkdir("data")
-
-file_name = "data/{}.csv".format(DATE)
-print("Writing to file: '{}'".format(file_name))
-
-with open(file_name, "w") as out:
-    out.write(";".join(headers) + "\n")
-    size = len(columns[headers[0]])
-    for i in range(size):
-        vals = []
-        for header in headers:
-            vals.append(columns[header][i])
-        out.write(";".join(vals) + "\n")
-while True:
-    pass
 browser.close()
 exit()
