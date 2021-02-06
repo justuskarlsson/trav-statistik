@@ -1,6 +1,4 @@
-* Split certain columns so that they can be treated as single numerics
-    - Make dict for header names, type(int, text, split) 
-* Handle shoeInfo
+* Add column for date of races and maybe type? (v75, v64..)
 * Get results from "/results"
 * Handle exception for races more than 2 years ago (click V75)
     ```html
@@ -18,3 +16,6 @@
 * Read directly from html to speed up (at end). **Currently 62 seconds**
     - Regex
     - Pip install dom parser
+* Split certain columns so that they can be treated as single numerics
+    - Make dict for header names, type(int, text, split) 
+* Handle shoeInfo
