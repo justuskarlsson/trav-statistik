@@ -1,4 +1,4 @@
-from Column import columns, Column
+from Column import columns, Column, HorseSplit, get_class_text
 from collections import defaultdict
 import os
 import traceback
@@ -25,6 +25,7 @@ class DataParser:
             traceback.print_exc()
     
     def fill_races(self):
+        horse_counter = 0
         for race_idx, race in enumerate(self.races):
             tds = race.findAll("td")
             for cell in tds:
@@ -40,7 +41,34 @@ class DataParser:
                 header = olabels[i].text.replace(":", "")
                 cell = ovalues[i]
                 self.parse_cell(header, cell)
+            while horse_counter < len(self.columns["horseNumber"]):
+                self.columns["raceIdx"].append(race_idx)
+                horse_counter += 1
+            
+                
 
+    def fill_results(self, results):
+        race_placements = []
+        for race in results:
+            placements = ["d" for i in range(20)]
+            rows = race.findAll("tr")
+            for row in rows[1:]:
+                horse_text = get_class_text(row, "horse-col", "td")
+                idx = HorseSplit.get_horse_number(horse_text)
+                idx = int(idx)
+                placement = get_class_text(row, "place-col","td")
+                placement = '99' if placement == '0' else placement
+                placements[idx] = placement
+            race_placements.append(placements)
+        for i in range(len(self.columns["horseNumber"])):
+            horse_number = int(self.columns["horseNumber"][i])
+            race_idx = self.columns["raceIdx"][i]
+            placement = race_placements[race_idx][horse_number]
+            self.columns["result"].append(placement)
+
+        for i in range(len(self.columns["raceIdx"])):
+            self.columns["raceIdx"][i] = str(self.columns["raceIdx"][i] + 1)
+            
 
     def write_to_file(self, date):
         headers = list(self.columns.keys())

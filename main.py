@@ -71,7 +71,16 @@ races = html.findAll("table", attrs={"class": "game-table"})[1:]
 
 data_parser = DataParser(races)
 data_parser.fill_races()
+
+browser.get(url+"/resultat")
+
+source_code = browser.find_element_by_xpath("//*").get_attribute("outerHTML")
+html = parse_html(source_code)
+results = html.findAll("table", attrs={"class": "game-table"})[1:]
+data_parser.fill_results(results)
 data_parser.write_to_file(DATE)
+while True:
+    pass
 
 
 browser.close()

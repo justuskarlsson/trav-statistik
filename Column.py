@@ -3,9 +3,11 @@
 HTML_PARSER = "html-parser"
 TEXT_PARSER = "text-parser"
 
+def get_all_classes(root, class_name, element_type="span"):
+    return root.findAll(element_type, attrs={"class": class_name})
+
 def get_class_text(root, class_name, element_type="span"):
-    el = root.findAll(element_type, attrs={"class": class_name})
-    if el:
+    if (el := get_all_classes(root, class_name, element_type)):
         return el[0].text
     else:
         return ""
@@ -40,8 +42,8 @@ class Decimal(Column):
 class Percentage(Column):
     def parse(self, text):
         text = text.replace("%", "")
-        text = text.replace(",", "")
-        val = int(text) / 100
+        text = text.replace(",", ".")
+        val = float(text) / 100
         return str(val)
 
 class Record(Column):
@@ -68,12 +70,17 @@ class HorseSplit(Column):
         ("horseAge", "horse-age"),
     ]
 
-    def parse(self, cell=None, data=None):
-        text = cell.text
+    @staticmethod
+    def get_horse_number(text):
         i = 0
         while i < len(text) and text[i].isdigit():
             i += 1
-        data["horseNumber"].append(text[:i])
+        return text[:i]
+
+    def parse(self, cell=None, data=None):
+        text = cell.text
+        horse_number = HorseSplit.get_horse_number(text)
+        data["horseNumber"].append(horse_number)
         for key, css_class in self.columns:
             val = get_class_text(cell, css_class)
             data[key].append(val)
