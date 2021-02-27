@@ -1,4 +1,3 @@
-# UNDER CONSTRUCTION
 
 HTML_PARSER = "html-parser"
 TEXT_PARSER = "text-parser"

@@ -4,3 +4,4 @@ data
 out.txt
 .vscode
 __pycache__
+temp*

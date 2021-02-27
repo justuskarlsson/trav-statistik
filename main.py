@@ -1,87 +1,102 @@
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
-from bs4 import BeautifulSoup as parse_html
-
-import time 
-from collections import defaultdict
+from argparse import ArgumentParser
+from datetime import datetime, timedelta
 import os
+import subprocess
+import time
+from threading import Timer 
+import sys
 
-from DataParser import DataParser
+arg_parser = ArgumentParser()
+arg_parser.add_argument("--start-date", default="2021-02-20")
+arg_parser.add_argument("--weeks", default=10, type=int)
 
-URL = "https://www.atg.se/spel/{}/V75"
-DATE = "2020-12-19"
-url = URL.format(DATE)
+args = arg_parser.parse_args()
 
-chrome_options = Options()
+start_date = datetime(*[int(x) for x in args.start_date.split("-")])
+one_week = timedelta(days=7)
 
-# !! Uncomment below to not open browser window !!
-#chrome_options.add_argument("--headless")
+weeks = args.weeks
 
-browser = webdriver.Chrome(options=chrome_options)
-browser.get(url)
+class Script:
+    MAX_CONCURRENT = 1
+    TIMEOUT = 15
+    cur_scripts = {}
+    script_counter = 0
+    dates = []
+    num_done = 0
+    max_tries = 3
 
-def try_until(function, times=100):
-    for _ in range(times):
-        try:
-            function()
-            break
-        except Exception as e:
-            print(e)
+    def __init__(self, script_args, date):
+        self.date = date
+        self.script_args = script_args
+        self.tries = 0
+        self.start_script()
+        
+    def start_script(self):
+        self.key = Script.script_counter
+        Script.script_counter += 1
+        self.instance = subprocess.Popen(self.script_args, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+            stderr=subprocess.DEVNULL)
+        timeout = Timer(Script.TIMEOUT, lambda: self.instance.kill())
+        timeout.start()
+        self.tries += 1
+        Script.cur_scripts[self.key] = self
 
-def click(id):
-    browser.find_element_by_id(id).click()
+    def wait_and_kill(self):
+        
+        self.instance.wait()
+        ret = self.instance.returncode
+        self.instance.kill()
+        Script.cur_scripts.pop(self.key)
 
-def click_css(selector, idx=0):
-    els = browser.find_elements_by_css_selector(selector)
-    els[idx].click()
+        if ret != 0:
+            print(f"wait and kill id({self.date}): {self.tries}/{Script.max_tries}")
+            if self.tries >= Script.max_tries:
+                print(f"Too many retries for args: {self.script_args}")
+                return
+            self.start_script()
+        else:
+            Script.num_done += 1
+            Script.dates.append(self.date)
+            print(f"{Script.num_done}/{weeks} scripts done")
 
-def click_all_css(selector, root_css):
-    root = browser.find_elements_by_css_selector(root_css)[0]
-    els = root.find_elements_by_css_selector(selector)
-    for el in els:
-        el.click()
+    @staticmethod
+    def check_max_concurrent(always_wait=False):
+        if always_wait or len(Script.cur_scripts) >= Script.MAX_CONCURRENT:
+            scripts = list(Script.cur_scripts.values())
+            for script in scripts:
+                script.wait_and_kill()
+        
 
-def accept_cookies():
-    click("onetrust-accept-btn-handler")
-    # time.sleep(1)
-
-def add_extra_stats():
-    click_css("[data-test-id=startlist-customize]")
-    # time.sleep(1)
-    click_all_css(".css-1tx51pb-Checkbox-styles--icon", ".css-1xikekk-StartlistDisplayOptionsDialog-styles--displayOptionsColumn-StartlistDisplayOptionsDialog-styles--displayOptionsDialogPopular")
-    click_all_css(".css-1tx51pb-Checkbox-styles--icon", ".css-13rqg9x-StartlistDisplayOptionsDialog-styles--displayOptionsColumn-StartlistDisplayOptionsDialog-styles--displayOptionsDialogOthers")
-
-    #click_css("[data-test-id=checkbox-earnings]")
-    click_css("[data-test-id=save-startlist-options]")
-
-
-# accept cookies
-
-# get custom fields
-try_until(accept_cookies)
-try_until(add_extra_stats)
-
-source_code = browser.find_element_by_xpath("//*").get_attribute("outerHTML")
-print(f"Length of source code: {len(source_code)}")
-
-
-html = parse_html(source_code)
-
-races = html.findAll("table", attrs={"class": "game-table"})[1:]
-
-data_parser = DataParser(races)
-data_parser.fill_races()
-
-browser.get(url+"/resultat")
-
-source_code = browser.find_element_by_xpath("//*").get_attribute("outerHTML")
-html = parse_html(source_code)
-results = html.findAll("table", attrs={"class": "game-table"})[1:]
-data_parser.fill_results(results)
-data_parser.write_to_file(DATE)
-while True:
-    pass
-
-
-browser.close()
-exit()
+try:
+    
+    for i in range(weeks):
+        date = start_date-i*one_week
+        date_str = date.strftime("%Y-%m-%d")
+        Script.check_max_concurrent()
+        cmd = ["python", "scrape_week.py", "--date", date_str]
+        Script(cmd, date_str)
+    while Script.cur_scripts:
+        Script.check_max_concurrent(always_wait=True)
+    out_lines = []
+    for date in Script.dates:
+        file_path = f"data/{date}.csv"
+        with open(file_path) as file:
+            lines = file.readlines()
+            if not out_lines:
+                out_lines.append(lines[0])
+            out_lines += lines[1:]
+            print(len(out_lines))
+        os.unlink(file_path)
+    if len(Script.dates) == 0:
+        print("Every week failed :(")
+        sys.exit(1)
+    out_file_path = f"data/{Script.dates[0]}-{weeks}.csv"
+    with open(out_file_path, "w") as out:
+        out.write("".join(out_lines))
+    print(f"Wrote combined output for weeks to '{out_file_path}'")
+except KeyboardInterrupt:
+    print("Killing scripts")
+    for script in Script.cur_scripts.values():
+        script.instance.kill()
+    print("Killed all scripts")

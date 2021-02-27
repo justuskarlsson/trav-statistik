@@ -1,15 +1,14 @@
-* Add column for date of races and maybe type? (v75, v64..)
-* Get results from "/results"
-* Handle exception for races more than 2 years ago (click V75)
+- [x] Add column for date of races and maybe type? (v75, v64..)
+- [x] Get results from "/results"
+- [x] Make scraper script that goes back week by week, then combines data.
+- [ ] Fix this:
+      After 15 file outputs, it starts to fail.
+      Task manager had 15 chrome drivers going, so apparently it doesn't quit.
+      Maybe just do an import of scrape_week / threading and don't do via terminal?
+- [ ] Handle exception for races more than 2 years ago (click V75)
     ```html
     <span class="css-1v9zbc5-TrackHighlights-styles--textWrapper" data-test-id="track-highlights-title">V75</span>
     ```
-* Save data
-    - Sqlite
-    - Folder with separate csv files, then combine (parallelizable)
-* Make scraper script that goes back week by week, then combines data.
-
-
 
 # Done
 

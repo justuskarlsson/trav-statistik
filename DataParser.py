@@ -2,6 +2,7 @@ from Column import columns, Column, HorseSplit, get_class_text
 from collections import defaultdict
 import os
 import traceback
+import pathlib
 
 OVERFLOW_LABEL = "css-1dzf2nj-startlistrow-styles--overflowRowLabel"
 OVERFLOW_VALUE = "css-1hd5aa-startlistrow-styles--overflowRowValue"
@@ -72,11 +73,12 @@ class DataParser:
 
     def write_to_file(self, date):
         headers = list(self.columns.keys())
+        root = pathlib.Path(__file__).parent.absolute()
+        dir_path = f"{root}/data"
+        if not os.path.isdir(dir_path):
+            os.mkdir(dir_path)
 
-        if not os.path.isdir("data"):
-            os.mkdir("data")
-
-        file_name = "data/{}.csv".format(date)
+        file_name = f"{dir_path}/{date}.csv"
         print("Writing to file: '{}'".format(file_name))
         with open(file_name, "w") as out:
             out.write(";".join(headers) + "\n")
