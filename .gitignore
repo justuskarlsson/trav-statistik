@@ -1,5 +1,4 @@
 *.log
-data
 *.exe
 out.txt
 .vscode

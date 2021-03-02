@@ -1,5 +1,3 @@
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
 from bs4 import BeautifulSoup as parse_html
 
 import time 
@@ -10,34 +8,31 @@ from argparse import ArgumentParser
 
 from DataParser import DataParser
 
-chrome_options = Options()
-chrome_options.add_argument("--headless")
-browser = webdriver.Chrome(options=chrome_options)
-args_parser = ArgumentParser()
-args_parser.add_argument("--date", default="2021-02-20")
-args = args_parser.parse_args()
-
-def main():
 
 
-    DATE = args.date
+def scrape_week(browser, date, first: bool) -> defaultdict: 
+
     URL = "https://www.atg.se/spel/{}/V75"
-    url = URL.format(DATE)
-
+    url = URL.format(date)
+    data_parser = DataParser()
     
     browser.get(url)
 
-    def try_until(function, times=100):
-        time.sleep(1)
-        for _ in range(times):
+    def try_until(function, max_time=1.0) -> bool:
+        exception = None
+        iterations = 10
+        for i in range(iterations):
             try:
                 function()
-                break
+                return True
             except Exception as e:
-                print(f"'try_until': {e}")
-        else:
-            print("'try_until': too many failures, exiting program ")
-            exit()
+                exception = e
+                if i < iterations - 1:
+                    time.sleep(max_time/iterations)
+
+        print(f"'try_until', too many failures: {exception}")
+        return False
+        
 
     def click(id):
         browser.find_element_by_id(id).click()
@@ -69,36 +64,20 @@ def main():
     # accept cookies
 
     # get custom fields
-    try_until(accept_cookies)
-    try_until(add_extra_stats)
+    if first:
+        success = try_until(accept_cookies)
+        success = success and try_until(add_extra_stats)
+        if not success:
+            return defaultdict(list)
 
     source_code = browser.find_element_by_xpath("//*").get_attribute("outerHTML")
-    print(f"Length of source code: {len(source_code)}")
-
-
     html = parse_html(source_code)
-
-    races = html.findAll("table", attrs={"class": "game-table"})[1:]
-
-    data_parser = DataParser(races)
-    data_parser.fill_races()
-
+    
     browser.get(url+"/resultat")
-
     source_code = browser.find_element_by_xpath("//*").get_attribute("outerHTML")
-    html = parse_html(source_code)
-    results = html.findAll("table", attrs={"class": "game-table"})[1:]
-    data_parser.fill_results(results)
-    data_parser.write_to_file(DATE)
+    results_html = parse_html(source_code)
 
+    
+    data_parser.parse_week(html, results_html, date)
 
-    sys.exit()
-
-if __name__ == "__main__":
-    try:
-        main()
-    except Exception as e:
-        print("Main ERROR:")
-        print(e)
-        browser.close()
-        sys.exit(1)
+    return data_parser.columns

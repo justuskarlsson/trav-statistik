@@ -8,9 +8,18 @@ OVERFLOW_LABEL = "css-1dzf2nj-startlistrow-styles--overflowRowLabel"
 OVERFLOW_VALUE = "css-1hd5aa-startlistrow-styles--overflowRowValue"
 
 class DataParser:
-    def __init__(self, races):
-        self.races = races
+    def __init__(self):
         self.columns = defaultdict(list)
+
+    def parse_week(self, html, results_html, date: str):
+        self.cur_date = date
+        races = html.findAll("table", attrs={"class": "game-table"})[1:]
+        self.races = races
+        self.fill_races()
+
+        results = results_html.findAll("table", attrs={"class": "game-table"})[1:]
+        self.fill_results(results)
+        
 
     def parse_cell(self, header, cell):
         try:
@@ -21,7 +30,7 @@ class DataParser:
                     self.columns[header].append(val)
                 elif parser.type == Column.HTML_PARSER:
                     parser.parse(cell, self.columns)
-        except:
+        except Exception:
             print(f"Error for header: '{header}':")
             traceback.print_exc()
     
@@ -51,7 +60,7 @@ class DataParser:
     def fill_results(self, results):
         race_placements = []
         for race in results:
-            placements = ["d" for i in range(20)]
+            placements = ["d" for _ in range(20)]
             rows = race.findAll("tr")
             for row in rows[1:]:
                 horse_text = get_class_text(row, "horse-col", "td")
@@ -66,25 +75,10 @@ class DataParser:
             race_idx = self.columns["raceIdx"][i]
             placement = race_placements[race_idx][horse_number]
             self.columns["result"].append(placement)
+            self.columns["won"].append("1" if placement.isdigit() and  int(placement) == 1 else "0")
+            self.columns["plats"].append("1" if placement.isdigit() and  int(placement) <= 3 else "0")
 
         for i in range(len(self.columns["raceIdx"])):
             self.columns["raceIdx"][i] = str(self.columns["raceIdx"][i] + 1)
             
 
-    def write_to_file(self, date):
-        headers = list(self.columns.keys())
-        root = pathlib.Path(__file__).parent.absolute()
-        dir_path = f"{root}/data"
-        if not os.path.isdir(dir_path):
-            os.mkdir(dir_path)
-
-        file_name = f"{dir_path}/{date}.csv"
-        print("Writing to file: '{}'".format(file_name))
-        with open(file_name, "w") as out:
-            out.write(";".join(headers) + "\n")
-            size = len(self.columns[headers[0]])
-            for i in range(size):
-                vals = []
-                for header in headers:
-                    vals.append(self.columns[header][i])
-                out.write(";".join(vals) + "\n")

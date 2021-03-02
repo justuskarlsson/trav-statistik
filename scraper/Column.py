@@ -34,9 +34,24 @@ class Integer(Column):
         return text.replace(" ", "")
 
 class Decimal(Column):
-    def parse(self, text: str):
+    def __init__(self, fallback_value="99.9"):
+        self.fallback_value = fallback_value
+
+    def parse(self, text):
+        if text.isalpha():
+            return self.fallback_value
         return text.replace(",", ".")
 
+class Odds(Decimal):
+    def parse(self, text: str):
+        if text.find("-") != -1:
+            odds = [] 
+            for part in text.split("-"):
+                val = float(super().parse(part))
+                odds.append(val)
+            return str(sum(odds) / len(odds))
+        else:
+            return super().parse(text)
 
 class Percentage(Column):
     def parse(self, text):
@@ -55,9 +70,9 @@ class Record(Column):
         for i in range(len(text) - 1, -1, -1):
             if text[i].isdigit():
                 suffix = text[i] + suffix
-        decimal = text[:-len(suffix)].replace(",", ".")
-        data[self.header + "-suffix"].append(suffix)
-        data[self.header + "-decimal"].append(decimal)
+        decimal = text[:-len(suffix)]
+        data[self.header + "Suffix"].append(suffix)
+        data[self.header + "Decimal"].append(decimal)
 
 
 class HorseSplit(Column):
@@ -139,8 +154,8 @@ columns = {
     ShoeInfo.header: ShoeInfo(),
     "cartInfo": Text(),
     LifeStats.header: LifeStats(),
-    "vOdds": Decimal(),
-    "pOdds": Decimal(),
+    "vOdds": Odds(),
+    "pOdds": Odds(),
     #"postPositionAndDistance": Split(" : "), # Ignore, already have info
     "Tränare": Text(),
     "Plats%": Percentage(),
@@ -152,4 +167,17 @@ columns = {
     ### Fortunately we can check the record ourselves in our database ###
     #"StarterCurrent": Split(),
     #"StarterPrev": Split(),
+}
+
+factors = {
+    "horseNumber",
+    "horseName",
+    "cartInfo",
+    "horseSex",
+    ShoeInfo.header,
+    "driver",
+    "Tränare",
+    "Hemmabana",
+    "recordSuffix",
+    "recordDecimal",
 }
