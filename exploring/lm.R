@@ -1,18 +1,24 @@
-library(tree)
-library(e1071)
-
 
 data = read.csv("../data/2021-02-20_200.csv", sep=";")
-data = subset(data, select=c(-plats, -result))
 
+
+val = data$vOdds * data$won
+mean(val[val > 0.0])
+data$val = val
+
+
+favorites = data[data$vOdds < 2.0,]
+
+
+data = subset(data, select=c(-Plats., -plats, -result, -won))
 n = dim(data)[1]
 set.seed(12345)
 id = sample(1:n, floor(0.8* n))
-train_set = data[id,]
+train_set = data[id,] 
 test_set = data[-id,]
 
 
-model = tree(as.factor(won)~., train_set)
+model = lm(val~., train_set)
 
 
 # Always pick yes on a horse with really low odds (a lot of people have betted on it)
@@ -46,15 +52,12 @@ eval_favorite = function(rate) {
 
 
 
-s = sprintf("Our model. Eval: %.2f", eval(predict(model, newdata=test_set, type="class")))
+s = sprintf("Our model. Eval: %.2f", eval(predict(model, newdata=test_set)))
 print(s)
 
 
+preds = predict(model, newdata=test_set)
+sort(preds, decreasing=TRUE)[1:20]
 
-eval_favorite(4.0)
-eval_favorite(3.0)
-eval_favorite(2.5)
-eval_favorite(2.0)
-eval_favorite(1.8)
-eval_favorite(1.5)
-eval_favorite(1.2)
+bets = which(preds > 1.0 && preds < 1.2)
+mean(test_set$val[bets])

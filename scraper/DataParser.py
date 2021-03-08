@@ -75,7 +75,10 @@ class DataParser:
             race_idx = self.columns["raceIdx"][i]
             placement = race_placements[race_idx][horse_number]
             self.columns["result"].append(placement)
-            self.columns["won"].append("1" if placement.isdigit() and  int(placement) == 1 else "0")
+            won = placement.isdigit() and int(placement) == 1
+            self.columns["won"].append(str(int(won)))
+            p_value = won * float(self.columns["vOdds"][i])
+            self.columns["pValue"].append(str(p_value))
             self.columns["plats"].append("1" if placement.isdigit() and  int(placement) <= 3 else "0")
 
         for i in range(len(self.columns["raceIdx"])):
