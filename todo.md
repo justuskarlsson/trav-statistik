@@ -1,6 +1,16 @@
 - [x] Add column for date of races and maybe type? (v75, v64..)
 - [x] Get results from "/results"
 - [x] Make scraper script that goes back week by week, then combines data.
+- [ ] Make dir for each scrape. Contains `factors.json` so we can extend upon a new week:
+
+```javascript
+"horses": {
+    "Jumbo Tron": 0,
+    "Bla": 1
+},
+"Tränare": ....
+```
+
 - [ ] Fix this:
       After 15 file outputs, it starts to fail.
       Task manager had 15 chrome drivers going, so apparently it doesn't quit.
