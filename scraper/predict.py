@@ -58,9 +58,7 @@ def write_to_file(columns, file_name, factors_ids):
         for i in range(size):
             vals = []
             for header in headers:
-                if len(columns[header]) <= i:
-                    print(f"Too few for {columns[header]}, {header}, {i}")
-                vals.append(columns[header][i])
+                vals.append(str(columns[header][i]))
             out.write(";".join(vals) + "\n")
     with open(f"{dir_path}/factors.json", "w") as f:
         f.write(json.dumps(factors_ids, indent="\t"))
@@ -72,27 +70,11 @@ def str_to_date(date_str):
 def date_to_str(date):
     return date.strftime("%Y-%m-%d")
 
-def parse(browser, weeks, start_date_str, extension, args):
-    start_date = str_to_date(start_date_str)
+def parse(browser, start_date_str, extension):
 
+    columns = scrape_week(browser, start_date_str, first=True, prediction=True)
 
-    factor_ids = defaultdict(dict)
-    columns = defaultdict(list)
-    
-
-
-    for i in range(weeks):
-        date = start_date-i*ONE_WEEK
-        date_str = date_to_str(date)
-        columns_i = scrape_week(browser, date_str, i == 0)
-        if len(columns_i) > 0:
-            print(f"{i+1}/{weeks} done.")
-            extend_entries(columns, columns_i)
-        else:
-            print(f"Parsing of date {date_str} failed...")
-
-    if extension:
-        old_columns, factor_ids = csv_to_dict(extension)
+    _, factor_ids = csv_to_dict(extension)
     
     for header, values in columns.items():
         if header not in factors:
@@ -102,52 +84,28 @@ def parse(browser, weeks, start_date_str, extension, args):
                 factor_ids[header][val] = len(factor_ids[header])
             columns[header][i] = str(factor_ids[header][val])
     
-    if extension:
-        extend_entries(old_columns, columns)
-        columns = old_columns
-        print(len(columns["horseAge"]))
-
-        # So we get the proper name
-        weeks += int(extension.split("_")[-1])
 
     if len(columns) == 0:
         print("Failed to parse any week :(")
     else:
-        write_to_file(columns, f"{start_date_str}_{weeks}", factor_ids)
+        write_to_file(columns, f"{start_date_str}-prediction", factor_ids)
 
 browser = None
 try:
     arg_parser = ArgumentParser()
-
-    arg_parser.add_argument("--start-date", default="2021-03-06")
-    arg_parser.add_argument("--weeks", default=10, type=int)
-    arg_parser.add_argument("--prediction", action="store_const", default=False, const=True)
-    arg_parser.add_argument("--extension", default="")
+    arg_parser.add_argument("--start-date", default="2021-03-13")
+    arg_parser.add_argument("--extension", default="2021-03-06_250")
     arg_parser.add_argument("--data-path", default="data")
     
     args = arg_parser.parse_args()
 
-    if args.extension:
-        start_date = args.extension.split("_")[0]
-        cur_date = str_to_date(start_date)
-        # V75 slut kl 19:00
-        cur_date += timedelta(hours=19)
-        weeks = 0
+    extension = f"{args.data_path}/{args.extension}"
 
-        while cur_date + ONE_WEEK < datetime.now():
-            weeks += 1
-            cur_date += ONE_WEEK
-
-        args.weeks = weeks
-        args.extension = f"{args.data_path}/{args.extension}"
-        args.start_date = date_to_str(cur_date)
-
-    print(args)
     chrome_options = Options()
     browser = webdriver.Chrome(options=chrome_options)
 
-    print("Starting parsing")
-    parse(browser, args.weeks, args.start_date, args.extension, args)
+    print("Starting prediction")
+    parse(browser, args.start_date, extension)
 
 except KeyboardInterrupt:
     print("Scraper cancelled by user")

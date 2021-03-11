@@ -19,7 +19,13 @@ class DataParser:
 
         results = results_html.findAll("table", attrs={"class": "game-table"})[1:]
         self.fill_results(results)
-        
+    
+    def predict(self, html, date: str):
+        self.cur_date = date
+        races = html.findAll("table", attrs={"class": "game-table"})[1:]
+        self.races = races
+        self.fill_races()
+        self.columns["raceIdx"] = [ str(race_idx + 1) for race_idx in self.columns["raceIdx"] ]
 
     def parse_cell(self, header, cell):
         try:

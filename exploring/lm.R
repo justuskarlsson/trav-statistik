@@ -1,6 +1,10 @@
+source("utils.r")
 
-data = read.csv("../data/2021-03-06_4/data.csv", sep=";")
-#data = read.csv("../data/2021-02-20_200.csv", sep=";")
+#data = read.csv("../data/2021-03-06_4/data.csv", sep=";")
+
+data = read.csv("../data/2021-02-20_200.csv", sep=";")
+
+data[data$betDistribution == 0.0,] = 0.0001
 
 
 val = data$vOdds * data$won
@@ -11,14 +15,6 @@ mean(data$vOdds)
 
 favorites = data[data$vOdds < 2.0,]
 mean(favorites$val)
-
-
-print_horses = function(horses){
-  for (i in 1:dim(horses)[1]) {
-    s = sprintf("%d-%d", horses$raceIdx[i], horses$horseNumber[i]+1)
-    print(s)
-  }
-}
 
 v_val = function(){
   data = subset(data, select=c(-Plats., -plats, -result, -won))

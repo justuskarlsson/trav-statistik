@@ -10,7 +10,7 @@ from DataParser import DataParser
 
 
 
-def scrape_week(browser, date, first: bool) -> defaultdict: 
+def scrape_week(browser, date, first: bool, prediction = False) -> defaultdict: 
 
     URL = "https://www.atg.se/spel/{}/V75"
     url = URL.format(date)
@@ -72,12 +72,13 @@ def scrape_week(browser, date, first: bool) -> defaultdict:
 
     source_code = browser.find_element_by_xpath("//*").get_attribute("outerHTML")
     html = parse_html(source_code)
-    
-    browser.get(url+"/resultat")
-    source_code = browser.find_element_by_xpath("//*").get_attribute("outerHTML")
-    results_html = parse_html(source_code)
 
-    
-    data_parser.parse_week(html, results_html, date)
+    if prediction:
+        data_parser.predict(html, date)
+    else:
+        browser.get(url+"/resultat")
+        source_code = browser.find_element_by_xpath("//*").get_attribute("outerHTML")
+        results_html = parse_html(source_code)
+        data_parser.parse_week(html, results_html, date)
 
     return data_parser.columns
