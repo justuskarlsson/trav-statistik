@@ -1,5 +1,3 @@
-source("utils.r")
-
 #data = read.csv("../data/2021-03-06_4/data.csv", sep=";")
 
 data = read.csv("../data/2021-03-06_250/data.csv", sep=";")
@@ -8,11 +6,16 @@ data[data$betDistribution == 0.0,] = 0.0001
 
 
 data$v75val = (1/data$betDistribution) * data$won
+data = subset(data, select=c(-Plats., -plats, -result, -won, -pValue))
+# Factors
+data = factorize_data(data)
 
 
 # PREDICTION
-data = subset(data, select=c(-Plats., -plats, -result, -won, -pValue))
+
+
 pred_data = read.csv("../data/2021-03-13-prediction/data.csv", sep=";")
+pred_data = factorize_data(pred_data)
 model = lm(v75val~., data)
 preds = predict(model, newdata=pred_data)
 preds[is.na(preds)] = -2.0
@@ -43,7 +46,7 @@ preds[is.na(preds)] = -2.0
 
 test_set$v75Pred = preds
 
-print_set = subset(test_set, select = c(raceIdx, horseNumber, vOdds, pOdds, Poï..ng, v75val, v75Pred))
+print_set = subset(test_set, select = c(raceIdx, horseNumber, vOdds, pOdds, Poäng, v75val, v75Pred))
 
 best = test_set[test_set$v75Pred > 2.0,]
 mean(best$v75val)
