@@ -18,3 +18,7 @@ factorize_data = function(data) {
   #data$recordDecimal = factor(data$recordDecimal)
   return (data)
 }
+
+trim_v75_data = function(data) {
+  subset(data, c(-vOdds, -pOdds))
+}

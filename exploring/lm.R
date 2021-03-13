@@ -2,7 +2,7 @@ source("utils.r")
 
 #data = read.csv("../data/2021-03-06_4/data.csv", sep=";")
 
-data = read.csv("../data/2021-02-20_200.csv", sep=";")
+data = read.csv("../data/2021-03-06_500/data.csv", sep=";")
 
 data[data$betDistribution == 0.0,] = 0.0001
 

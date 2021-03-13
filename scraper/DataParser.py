@@ -22,7 +22,8 @@ class DataParser:
     
     def predict(self, html, date: str):
         self.cur_date = date
-        races = html.findAll("table", attrs={"class": "game-table"})[1:]
+        races2 = html.findAll("table", attrs={"class": "game-table"})
+        races = races2
         self.races = races
         self.fill_races()
         self.columns["raceIdx"] = [ str(race_idx + 1) for race_idx in self.columns["raceIdx"] ]
