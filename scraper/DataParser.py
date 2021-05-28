@@ -24,6 +24,7 @@ class DataParser:
         self.cur_date = date
         races2 = html.findAll("table", attrs={"class": "game-table"})
         races = races2
+        #races = races2[1:]
         self.races = races
         self.fill_races()
         self.columns["raceIdx"] = [ str(race_idx + 1) for race_idx in self.columns["raceIdx"] ]

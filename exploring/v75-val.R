@@ -1,6 +1,6 @@
 #data = read.csv("../data/2021-03-06_4/data.csv", sep=";")
 
-data = read.csv("../data/2021-03-06_500/data.csv", sep=";")
+data = read.csv("../data/2021-03-20_502/data.csv", sep=";")
 data = trim_v75_data(data)
 data[data$betDistribution == 0.0,] = 0.0001
 
@@ -24,6 +24,7 @@ pred_data$v75Pred = preds
 print_set = subset(pred_data, select = c(raceIdx, horseNumber, Poäng, v75Pred))
 print_set$horseNumber = print_set$horseNumber + 1
 
+write.csv(print_set, file="pred.csv")
 
 # TESTING
 

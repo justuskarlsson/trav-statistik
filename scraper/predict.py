@@ -93,11 +93,13 @@ def parse(browser, start_date_str, extension):
 browser = None
 try:
     arg_parser = ArgumentParser()
-    arg_parser.add_argument("--start-date", default="2021-03-13")
-    arg_parser.add_argument("--extension", default="2021-03-06_500")
+    arg_parser.add_argument("--start-date", required=True)
+    arg_parser.add_argument("--extension", required=True)
     arg_parser.add_argument("--data-path", default="data")
+
     
     args = arg_parser.parse_args()
+
 
     extension = f"{args.data_path}/{args.extension}"
 

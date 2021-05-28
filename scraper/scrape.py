@@ -119,10 +119,9 @@ browser = None
 try:
     arg_parser = ArgumentParser()
 
-    arg_parser.add_argument("--start-date", default="2021-03-06")
-    arg_parser.add_argument("--weeks", default=10, type=int)
-    arg_parser.add_argument("--prediction", action="store_const", default=False, const=True)
-    arg_parser.add_argument("--extension", default="")
+    arg_parser.add_argument("--start-date")
+    arg_parser.add_argument("--weeks")
+    arg_parser.add_argument("--extension", default="", help="If specified, no need to provide --start-date or --weeks.")
     arg_parser.add_argument("--data-path", default="data")
     
     args = arg_parser.parse_args()
